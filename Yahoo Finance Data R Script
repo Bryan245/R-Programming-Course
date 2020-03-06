@@ -1,0 +1,68 @@
+library(XML)
+
+#' 2009 H1N1 Influenza Outbreak
+#' Data Date Range: March 13, 2009 to June 9th 2009
+#' %5EGSPC as S&P500 data scraping index
+#' %5EIXIC as NASDAQ data scraping index
+#' %5EDJI as Dow Jones Indusrial data scraping index
+#' 
+stocks <- c("%5EGSPC", "%5EGDAXI", "%5EHSI")
+stock09_index <- c("2009 S&P 500", "2009 DAX", "2009 Hang Seng")
+i = 1
+
+for (s in stocks) {
+  url <- paste0("https://finance.yahoo.com/quote/", s, "/history?period1=1236988800&period2=1244592000&interval=1d&filter=history&frequency=1d")
+  webpage <- readLines(url)
+  html <- htmlTreeParse(webpage, useInternalNodes = TRUE, asText = TRUE)
+  tableNodes <- getNodeSet(html, "//table")
+  
+  # ASSIGN TO STOCK NAMED DFS
+  assign(stock09_index[i], readHTMLTable(tableNodes[[1]], 
+                          header= c("Date", "Open", "High", "Low", "Close", "Adj Close",
+                                    "Volume")))
+  i = i + 1
+  
+  
+}
+
+DAX2009_df <- data.frame("Date" = `2009 DAX`$Date, "Close" = `2009 DAX`$Close)
+Hang2009_df <- data.frame("Date" = `2009 Hang Seng`$Date, "Close" = `2009 Hang Seng`$Close)
+SP2009_df <- data.frame("Date" = `2009 S&P 500`$Date, "Close" = `2009 S&P 500`$Close)
+
+write.csv(DAX2009_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\DAX 2009.csv", row.names = FALSE)
+write.csv(Hang2009_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\Hang Seng 2009.csv", row.names = FALSE)
+write.csv(SP2009_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\S&P 2009.csv", row.names = FALSE)
+
+
+#' 2020 COVID-19 Influenza Outbreak
+#' Data Date Range: December 1st, 2019 to March 3rd, 2020
+#' %5EGSPC as S&P500 data scraping index
+#' %5EIXIC as NASDAQ data scraping index
+#' %5EDJI as Dow Jones Indusrial data scraping index
+#' 
+stocks <- c("%5EGSPC", "%5EGDAXI", "%5EHSI")
+stock20_index <- c("2020 S&P 500", "2020 Dax", "2020 Hang Seng")
+i = 1
+
+for (s in stocks) {
+  url <- paste0("https://finance.yahoo.com/quote/", s, "/history?period1=1575244800&period2=1583280000&interval=1d&filter=history&frequency=1d")
+  webpage <- readLines(url)
+  html <- htmlTreeParse(webpage, useInternalNodes = TRUE, asText = TRUE)
+  tableNodes <- getNodeSet(html, "//table")
+  
+  # ASSIGN TO STOCK NAMED DFS
+  assign(stock20_index[i], readHTMLTable(tableNodes[[1]], 
+                                       header= c("Date", "Open", "High", "Low", "Close", "Adj Close",
+                                                 "Volume")))
+  i = i + 1
+  
+  
+}
+
+DAX2020_df <- data.frame("Date" = `2020 Dax`$Date, "Close" = `2020 Dax`$Close)
+Hang2020_df <- data.frame("Date" = `2020 Hang Seng`$Date, "Close" = `2020 Hang Seng`$Close)
+SP2020_df <- data.frame("Date" = `2020 S&P 500`$Date, "Close" = `2020 S&P 500`$Close)
+
+write.csv(DAX2020_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\DAX 2020.csv", row.names = FALSE)
+write.csv(Hang2020_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\Hang Seng 2020.csv", row.names = FALSE)
+write.csv(SP2020_df,"C:\\Users\\bryan\\Desktop\\Econometrics 2019\\R Programming Project 1\\S&P 2020.csv", row.names = FALSE)
