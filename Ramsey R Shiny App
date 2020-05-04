@@ -29,6 +29,7 @@ Northanger_Text <- original_books[original_books$book == 'Northanger Abbey',]
 Persuasion_Text <- original_books[original_books$book == 'Persuasion',]
 
 # Function for separating selected novel words line by line
+# Note: Limited the amount of elements for the array just to not risk overload when testing, not necessary to limit to 1000.
 tidy_func <- function(book_selection)
 {
   if (book_selection == 'Emma') {
@@ -58,6 +59,7 @@ tidy_func <- function(book_selection)
 }
 
 # Function for grabbing individual letters of words in novel
+# Note: Limited the amount of elements for the array just to not risk overload when testing, not necessary to limit to 1000.
 words_vec <- function(words) {
   
   x <- 1:1000
@@ -86,6 +88,7 @@ words_vec <- function(words) {
 }
 
 # Function for grabbing all concatenated words
+# Note: Limited the amount of elements for the array just to not risk overload when testing, not necessary to limit to 1000.
 allwords_vec <- function(words) {
   
   x <- 1:1000
@@ -114,6 +117,7 @@ allwords_vec <- function(words) {
 }
 
 # Subset of previous function "word_vec" for returning letters
+# Note: Limited the amount of elements for the array just to not risk overload when testing, not necessary to limit to 100.
 rt_lt <- function(words) {
   
   x <- 1:100
