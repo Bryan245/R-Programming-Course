@@ -85,6 +85,7 @@ words_vec <- function(words) {
   
 }
 
+# Function for grabbing all concatenated words
 allwords_vec <- function(words) {
   
   x <- 1:1000
@@ -112,7 +113,7 @@ allwords_vec <- function(words) {
   
 }
 
-# Subset of previous function for returning letters
+# Subset of previous function "word_vec" for returning letters
 rt_lt <- function(words) {
   
   x <- 1:100
@@ -173,7 +174,7 @@ ui <- fluidPage(
     
     mainPanel(
         
-        # Output: Tabset w/ plot, summary, and table ----
+        # Output: Tabset with background, plot, and results
         tabsetPanel(type = "tabs",
                     tabPanel("Background", textOutput("background")),
                     tabPanel("Histogram of Letters", plotOutput("plot")),
@@ -230,17 +231,21 @@ server <- function(input, output) {
     })
   })
   
+  # Reactive variable for individual letters
   lt1 <- reactive({
     
     rt_lt(tidy_func((input$selection)))
     
   })
   
+  # Reactive variable for concatenated letters
   lt2 <- reactive({
     
     allwords_vec(tidy_func(input$selection))
     
   })
+  
+  # Simple print statement for app background
   
   output$background <- renderPrint({
     
@@ -255,15 +260,14 @@ server <- function(input, output) {
     
   })
   
+  # Output for result of word search
+  
   output$results <- renderTable({
     
     terms()
   })
   
-  # output$test_results <- renderTable({
-    
-    # lt1()
-  # })
+  # Output for historgram of most frequent letters
   
   output$plot <- renderPlot({
     
@@ -272,6 +276,8 @@ server <- function(input, output) {
     barplot(lt1()$Freq,names.arg=lt1()$x,xlab="Letters",ylab="Freq",col=coul,
             main="Frequency of Letters",border="white")
   })
+  
+  #Output for concatenated letters
   
   output$test_results <- renderTable({
     
