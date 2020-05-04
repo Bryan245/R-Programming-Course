@@ -1,0 +1,287 @@
+library(shiny)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+library(tidytext)
+library(RColorBrewer)
+library(wordcloud)
+library(rsconnect)
+library(shinythemes)
+
+#----------------------------------- Global Code ------------------------------------------#
+# Getting all of Jane Austen' Novel Data
+original_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(line = row_number(),
+         chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+                                                 ignore_case = TRUE)))) %>%
+  ungroup()
+
+# List of valid books to choose from
+books <- unique(original_books['book'])
+
+# Subsetting words from each novel
+emma_Text <- original_books[original_books$book == 'Emma',]
+Sense_Text <- original_books[original_books$book == 'Sense & Sensibility',]
+Pride_Text <- original_books[original_books$book == 'Pride & Prejudice',]
+Mansfield_Text <- original_books[original_books$book == 'Mansfield Park',]
+Northanger_Text <- original_books[original_books$book == 'Northanger Abbey',]
+Persuasion_Text <- original_books[original_books$book == 'Persuasion',]
+
+# Function for separating selected novel words line by line
+tidy_func <- function(book_selection)
+{
+  if (book_selection == 'Emma') {
+    tidy_books <- emma_Text %>%
+      unnest_tokens(word, text)
+    return(tidy_books[1:1000, 4])
+  } else if (book_selection == 'Sense & Sensibility') {
+    tidy_books <- Sense_Text %>%
+      unnest_tokens(word, text)
+    return(tidy_books[1:1000, 4])
+  } else if (book_selection == 'Pride & Prejudice') {
+    tidy_books <- Pride_Text %>%
+      unnest_tokens(word, text)
+    return(tidy_books[1:1000, 4])
+  } else if (book_selection == 'Mansfield Park') {
+    tidy_books <- Mansfield_Text %>%
+      unnest_tokens(word, text)
+    return(tidy_books[1:1000, 4])
+  } else if (book_selection == 'Northanger Abbey') {
+    tidy_books <- Northanger_Text %>%
+      unnest_tokens(word, text)
+    return(tidy_books[1:1000, 4])
+  } else (book_selection == 'Persuasion')
+    tidy_books <- Persuasion_Text %>%
+      unnest_tokens(word,text)
+    return (tidy_books[1:1000, 4])
+}
+
+# Function for grabbing individual letters of words in novel
+words_vec <- function(words) {
+  
+  x <- 1:1000
+  
+  for (i in words) {
+    
+    my_chars <- strsplit(as.character(i),"")
+    
+    for (j in 1:1000) {
+      
+      x[j] <- my_chars[[j]][1]
+    }
+    
+  }
+  
+  lt <- x[seq(1, length(x), 2)]
+  CW <- 1:1000
+  
+  for (i in 1:1000)
+  {
+    CW[i] <- paste0(sample(lt,1,replace=TRUE), sample(lt,1,replace=TRUE), sample(lt,1,replace=TRUE))
+  }
+  
+  return (sample(CW,1))
+  
+}
+
+allwords_vec <- function(words) {
+  
+  x <- 1:1000
+  
+  for (i in words) {
+    
+    my_chars <- strsplit(as.character(i),"")
+    
+    for (j in 1:1000) {
+      
+      x[j] <- my_chars[[j]][1]
+    }
+    
+  }
+  
+  lt <- x[seq(1, length(x), 2)]
+  CW <- 1:1000
+  
+  for (i in 1:1000)
+  {
+    CW[i] <- paste0(sample(lt,1,replace=TRUE), sample(lt,1,replace=TRUE), sample(lt,1,replace=TRUE))
+  }
+  
+  return (CW[1:500])
+  
+}
+
+# Subset of previous function for returning letters
+rt_lt <- function(words) {
+  
+  x <- 1:100
+  
+  for (i in words) {
+    
+    my_chars <- strsplit(as.character(i),"")
+    
+    for (j in 1:100) {
+      
+      x[j] <- my_chars[[j]][1]
+    }
+    
+  }
+  
+  lt <- x[seq(1, length(x), 2)]
+  
+  char_frequencies <- as.data.frame(table(x))
+  
+  return(char_frequencies)
+  
+}
+
+
+
+
+#----------------------------------- Global Code ------------------------------------------#
+
+#----------------------------------- Shiny App Code ------------------------------------------#
+ui <- fluidPage(
+  # Application title
+  theme = shinytheme("flatly"),
+  titlePanel("Ramsey Simulator"),
+  
+  
+  sidebarLayout(
+    # Sidebar with a slider and selection inputs
+    sidebarPanel(
+      
+      sliderInput("n",
+                  "Number of iterations you would like to do. Note that 100 iterations averages about 20 seconds of search time, and will grow with larger iterations but will increase your chances of finding your word!",
+                  value = 100,
+                  min = 100,
+                  max = 1000),
+      hr(),
+      selectInput("selection", "Choose a book:",
+                  choices = books),
+      actionButton("update", "Change Book"),
+      hr(),
+      textInput("word", "Word to Find", "hey"),
+      verbatimTextOutput("value"),
+      actionButton("updateW", "Change Word"),
+      hr()
+      
+      
+      
+    ),
+    
+    mainPanel(
+        
+        # Output: Tabset w/ plot, summary, and table ----
+        tabsetPanel(type = "tabs",
+                    tabPanel("Background", textOutput("background")),
+                    tabPanel("Histogram of Letters", plotOutput("plot")),
+                    tabPanel("Ramsey Simualator", tableOutput("results")),
+                    tabPanel("Word Simulations", tableOutput("test_results"))
+        )
+      
+      #textOutput("test_word"),
+      #br(), br(),
+      #tableOutput("results"),
+      #plotOutput("plot"),
+      #tableOutput("test_results")
+    )
+  
+  )
+)
+
+server <- function(input, output) {
+  # This output variable "value" can reference any text input e.g "selection" & "word" for now.
+  # output$value <- renderText({ input$selection })
+  
+  i <- 1
+  
+  try_while <- function(word_match){
+    
+    while (words_vec(tidy_func(input$selection)) != word_match & i < input$n)
+    {
+      words_vec(tidy_func(input$selection))
+      i = i + 1
+    }
+    
+    if (i < input$n)
+    {
+      print("Word was found!")
+    }
+    else
+      print("Ramsey failed you....")
+    
+  }
+  
+  terms <- reactive({
+    # Change when the "update" button is pressed...
+    input$update
+    input$updateW
+    
+    
+    # ...but not for anything else
+    isolate({
+      withProgress({
+        setProgress(message = "Processing corpus...")
+        #words_vec(tidy_func(input$selection))
+        try_while(input$word)
+      })
+    })
+  })
+  
+  lt1 <- reactive({
+    
+    rt_lt(tidy_func((input$selection)))
+    
+  })
+  
+  lt2 <- reactive({
+    
+    allwords_vec(tidy_func(input$selection))
+    
+  })
+  
+  output$background <- renderPrint({
+    
+    print("Welcome! This app is an attempt to experiment with the fun mathematical theory known as Ramsey's Theory using R Shiny App. 
+          Some background on what the app is doing: You can select whichever of the six novels from Jane Austen, 
+          and enter a three letter word in the text box below that. Once you have done these things,
+          the app will attempt to find your word through a combination of letters found throughout
+          the entire novel. This is 'simulating' the idea that, there are only so many combinations of letters
+          that can be concatenated together before you eventually find what you're looking for. For this reason,
+          one can make the argument that Ramsey's Theory to some extent shows how conspiracy theories
+          can take off by 'seeing what you want to see'. Have Fun!")
+    
+  })
+  
+  output$results <- renderTable({
+    
+    terms()
+  })
+  
+  # output$test_results <- renderTable({
+    
+    # lt1()
+  # })
+  
+  output$plot <- renderPlot({
+    
+    coul <- brewer.pal(5, "Set2") 
+    
+    barplot(lt1()$Freq,names.arg=lt1()$x,xlab="Letters",ylab="Freq",col=coul,
+            main="Frequency of Letters",border="white")
+  })
+  
+  output$test_results <- renderTable({
+    
+    lt2()
+    
+    
+  })
+  
+
+}
+shinyApp(ui = ui, server = server)
+
+#----------------------------------- Shiny App Code ------------------------------------------#
